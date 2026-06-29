@@ -183,15 +183,17 @@
      MULTI-PROXY SYSTEM
      Each entry has:
        build(url)         → proxy URL string
-       extract(res,text)  → raw content string
+       extract(data,text) → raw content string
        raw                → true if response is plain text (not JSON wrapper)
   ───────────────────────────────────────────────────────────── */
   const PROXIES = [
     {
+      /* Fixed: root path (not /get), raw:false so res.json() is called,
+         extract pulls .contents from the JSON response             */
       name: "vixsrcproxy2",
-      build: (u) => "https://vixsrcproxy2.khantara922.workers.dev/get?url=" + encodeURIComponent(u),
+      build: (u) => "https://vixsrcproxy2.khantara922.workers.dev/?url=" + encodeURIComponent(u),
       extract: (data) => data.contents || "",
-      raw: true,
+      raw: false,
     },
     {
       name: "CORSProxy.io",
@@ -261,9 +263,13 @@
 
         if (!res.ok) throw new Error("HTTP " + res.status);
 
-        const text = proxy.raw
-          ? await res.text()
-          : proxy.extract(await res.json(), "");
+        let text;
+        if (proxy.raw) {
+          text = await res.text();
+        } else {
+          const data = await res.json();
+          text = proxy.extract(data, "");
+        }
 
         if (!text) throw new Error("empty body");
 
