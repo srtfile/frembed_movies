@@ -9,235 +9,115 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg:       #0a0e1a;
-      --surface:  #111827;
-      --surface2: #1a2236;
-      --border:   #1e2d45;
-      --cyan:     #00d4ff;
-      --green:    #00ff88;
-      --red:      #ff4757;
-      --yellow:   #ffd32a;
-      --muted:    #4a6080;
-      --text:     #c9d8f0;
-      --text-dim: #6b84a8;
-      --mono:     'JetBrains Mono', monospace;
-      --sans:     'Inter', sans-serif;
+      --bg:#0a0e1a; --surface:#111827; --surface2:#1a2236; --border:#1e2d45;
+      --cyan:#00d4ff; --green:#00ff88; --red:#ff4757; --yellow:#ffd32a;
+      --muted:#4a6080; --text:#c9d8f0; --text-dim:#6b84a8;
+      --mono:'JetBrains Mono',monospace; --sans:'Inter',sans-serif;
     }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--sans);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px 16px 80px;
+    body { background:var(--bg); color:var(--text); font-family:var(--sans);
+      min-height:100vh; display:flex; flex-direction:column; align-items:center;
+      padding:40px 16px 80px; }
+    header { text-align:center; margin-bottom:48px; max-width:640px; }
+    .logo-row { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:12px; }
+    .logo-icon { width:40px; height:40px; background:linear-gradient(135deg,var(--cyan),#006aff);
+      border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; }
+    h1 { font-family:var(--mono); font-size:clamp(1.4rem,4vw,2rem); font-weight:700; color:#fff; letter-spacing:-0.02em; }
+    h1 span { color:var(--cyan); }
+    .subtitle { font-size:.875rem; color:var(--text-dim); line-height:1.6; font-family:var(--mono); }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:14px;
+      padding:28px; width:100%; max-width:700px; }
+    .form-group { margin-bottom:16px; }
+    label { display:block; font-family:var(--mono); font-size:.72rem; font-weight:500;
+      color:var(--cyan); letter-spacing:.12em; text-transform:uppercase; margin-bottom:8px; }
+    .input-row { display:flex; gap:10px; }
+    input[type="text"] { flex:1; background:var(--surface2); border:1px solid var(--border);
+      border-radius:8px; color:var(--text); font-family:var(--mono); font-size:.875rem;
+      padding:12px 16px; outline:none; transition:border-color .2s; }
+    input[type="text"]:focus { border-color:var(--cyan); }
+    input[type="text"]::placeholder { color:var(--muted); }
+    .row-selects { display:flex; gap:10px; flex-wrap:wrap; }
+    select { flex:1; min-width:120px; background:var(--surface2); border:1px solid var(--border);
+      border-radius:8px; color:var(--text); font-family:var(--mono); font-size:.8rem;
+      padding:10px 14px; outline:none; cursor:pointer; appearance:none; -webkit-appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234a6080' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat:no-repeat; background-position:right 12px center;
+      padding-right:32px; transition:border-color .2s; }
+    select:focus { border-color:var(--cyan); }
+    .btn { background:linear-gradient(135deg,var(--cyan),#0099cc); border:none;
+      border-radius:8px; color:#000; cursor:pointer; font-family:var(--mono);
+      font-size:.875rem; font-weight:700; letter-spacing:.04em; padding:12px 24px;
+      transition:opacity .2s,transform .1s; white-space:nowrap; }
+    .btn:hover { opacity:.88; transform:translateY(-1px); }
+    .btn:active { transform:translateY(0); }
+    .btn:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+    #scanner { display:none; margin:24px 0 0; }
+    .scan-label { font-family:var(--mono); font-size:.72rem; color:var(--cyan);
+      letter-spacing:.1em; margin-bottom:8px; display:flex; justify-content:space-between; }
+    .proxy-status { font-family:var(--mono); font-size:.68rem; color:var(--text-dim);
+      margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; }
+    .proxy-pill { padding:2px 8px; border-radius:99px; border:1px solid var(--border);
+      font-size:.65rem; transition:all .3s; }
+    .proxy-pill.active { border-color:var(--cyan); color:var(--cyan); background:rgba(0,212,255,.1); }
+    .proxy-pill.dead   { border-color:var(--red);  color:var(--red);  background:rgba(255,71,87,.08); text-decoration:line-through; }
+    .proxy-pill.idle   { border-color:var(--border); color:var(--muted); }
+    .progress-track { height:3px; background:var(--border); border-radius:99px; overflow:hidden; }
+    .progress-bar { height:100%; width:0%; background:linear-gradient(90deg,var(--cyan),var(--green));
+      border-radius:99px; transition:width .4s ease; box-shadow:0 0 8px var(--cyan); }
+    .log-box { background:var(--bg); border:1px solid var(--border); border-radius:8px;
+      font-family:var(--mono); font-size:.72rem; color:var(--text-dim); padding:14px 16px;
+      height:140px; overflow-y:auto; margin-top:14px; line-height:1.7;
+      scroll-behavior:smooth; white-space:pre-wrap; }
+    .log-box::-webkit-scrollbar { width:4px; }
+    .log-box::-webkit-scrollbar-thumb { background:var(--border); border-radius:99px; }
+    .log-line { display:block; }
+    .log-line.ok   { color:var(--green); }
+    .log-line.warn { color:var(--yellow); }
+    .log-line.err  { color:var(--red); }
+    .log-line.info { color:var(--cyan); }
+    #results { width:100%; max-width:700px; margin-top:24px; }
+    .result-header { font-family:var(--mono); font-size:.72rem; color:var(--text-dim);
+      letter-spacing:.1em; text-transform:uppercase; margin-bottom:12px;
+      display:flex; justify-content:space-between; align-items:center; }
+    .badge { background:var(--surface2); border:1px solid var(--border); border-radius:99px;
+      font-size:.68rem; padding:3px 10px; color:var(--green); font-family:var(--mono); }
+    .media-card { background:var(--surface); border:1px solid var(--border); border-radius:10px;
+      padding:16px 18px; margin-bottom:10px; display:flex; align-items:center; gap:14px;
+      transition:border-color .2s; }
+    .media-card:hover { border-color:var(--cyan); }
+    .media-type-badge { font-family:var(--mono); font-size:.68rem; font-weight:700;
+      padding:4px 9px; border-radius:5px; flex-shrink:0; letter-spacing:.05em; }
+    .type-m3u8 { background:rgba(0,212,255,.15); color:var(--cyan);   border:1px solid rgba(0,212,255,.3); }
+    .type-mpd  { background:rgba(255,211,42,.12); color:var(--yellow); border:1px solid rgba(255,211,42,.3); }
+    .type-mp4  { background:rgba(0,255,136,.12);  color:var(--green);  border:1px solid rgba(0,255,136,.3); }
+    .media-url { font-family:var(--mono); font-size:.78rem; color:var(--text);
+      flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+    .copy-btn { flex-shrink:0; background:transparent; border:1px solid var(--border);
+      border-radius:6px; color:var(--text-dim); cursor:pointer; font-family:var(--mono);
+      font-size:.68rem; padding:5px 10px; transition:all .2s; }
+    .copy-btn:hover { border-color:var(--cyan); color:var(--cyan); background:rgba(0,212,255,.06); }
+    .copy-btn.copied { border-color:var(--green); color:var(--green); }
+    .open-btn { flex-shrink:0; background:transparent; border:1px solid var(--border);
+      border-radius:6px; color:var(--text-dim); cursor:pointer; font-family:var(--mono);
+      font-size:.68rem; padding:5px 10px; text-decoration:none; display:inline-block; transition:all .2s; }
+    .open-btn:hover { border-color:var(--green); color:var(--green); background:rgba(0,255,136,.06); }
+    .notice { background:rgba(0,212,255,.06); border:1px solid rgba(0,212,255,.2);
+      border-radius:8px; padding:12px 16px; font-family:var(--mono); font-size:.72rem;
+      color:var(--text-dim); line-height:1.7; margin-top:28px; max-width:700px; width:100%; }
+    .notice strong { color:var(--cyan); font-weight:500; }
+    .notice a { color:var(--cyan); }
+    .empty { text-align:center; padding:40px 0; font-family:var(--mono); font-size:.8rem; color:var(--muted); }
+    .empty .icon { font-size:2rem; margin-bottom:12px; }
+    .error-box { background:rgba(255,71,87,.08); border:1px solid rgba(255,71,87,.3);
+      border-radius:8px; padding:14px 16px; font-family:var(--mono); font-size:.78rem;
+      color:var(--red); margin-top:16px; }
+    @media (max-width:520px) {
+      .input-row, .row-selects { flex-direction:column; }
+      .media-card { flex-wrap:wrap; }
+      .media-url { white-space:normal; word-break:break-all; }
     }
-
-    header {
-      text-align: center;
-      margin-bottom: 48px;
-      max-width: 640px;
-    }
-
-    .logo-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .logo-icon {
-      width: 40px; height: 40px;
-      background: linear-gradient(135deg, var(--cyan), #006aff);
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; flex-shrink: 0;
-    }
-
-    h1 {
-      font-family: var(--mono);
-      font-size: clamp(1.4rem, 4vw, 2rem);
-      font-weight: 700; color: #fff; letter-spacing: -0.02em;
-    }
-    h1 span { color: var(--cyan); }
-
-    .subtitle {
-      font-size: 0.875rem; color: var(--text-dim);
-      line-height: 1.6; font-family: var(--mono);
-    }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px; padding: 28px;
-      width: 100%; max-width: 700px;
-    }
-
-    .form-group { margin-bottom: 16px; }
-
-    label {
-      display: block; font-family: var(--mono); font-size: 0.72rem;
-      font-weight: 500; color: var(--cyan); letter-spacing: 0.12em;
-      text-transform: uppercase; margin-bottom: 8px;
-    }
-
-    .input-row { display: flex; gap: 10px; }
-
-    input[type="text"] {
-      flex: 1; background: var(--surface2);
-      border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text); font-family: var(--mono); font-size: 0.875rem;
-      padding: 12px 16px; outline: none; transition: border-color 0.2s;
-    }
-    input[type="text"]:focus { border-color: var(--cyan); }
-    input[type="text"]::placeholder { color: var(--muted); }
-
-    .row-selects { display: flex; gap: 10px; flex-wrap: wrap; }
-
-    select {
-      flex: 1; min-width: 120px;
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 8px; color: var(--text); font-family: var(--mono);
-      font-size: 0.8rem; padding: 10px 14px; outline: none; cursor: pointer;
-      appearance: none; -webkit-appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234a6080' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 12px center;
-      padding-right: 32px; transition: border-color 0.2s;
-    }
-    select:focus { border-color: var(--cyan); }
-
-    .btn {
-      background: linear-gradient(135deg, var(--cyan), #0099cc);
-      border: none; border-radius: 8px; color: #000; cursor: pointer;
-      font-family: var(--mono); font-size: 0.875rem; font-weight: 700;
-      letter-spacing: 0.04em; padding: 12px 24px;
-      transition: opacity 0.2s, transform 0.1s; white-space: nowrap;
-    }
-    .btn:hover { opacity: 0.88; transform: translateY(-1px); }
-    .btn:active { transform: translateY(0); }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-    #scanner { display: none; margin: 24px 0 0; }
-
-    .scan-label {
-      font-family: var(--mono); font-size: 0.72rem; color: var(--cyan);
-      letter-spacing: 0.1em; margin-bottom: 8px;
-      display: flex; justify-content: space-between;
-    }
-
-    .progress-track {
-      height: 3px; background: var(--border);
-      border-radius: 99px; overflow: hidden;
-    }
-
-    .progress-bar {
-      height: 100%; width: 0%;
-      background: linear-gradient(90deg, var(--cyan), var(--green));
-      border-radius: 99px; transition: width 0.4s ease;
-      box-shadow: 0 0 8px var(--cyan);
-    }
-
-    .log-box {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 8px; font-family: var(--mono); font-size: 0.72rem;
-      color: var(--text-dim); padding: 14px 16px; height: 140px;
-      overflow-y: auto; margin-top: 14px; line-height: 1.7;
-      scroll-behavior: smooth; white-space: pre-wrap;
-    }
-    .log-box::-webkit-scrollbar { width: 4px; }
-    .log-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
-
-    .log-line { display: block; }
-    .log-line.ok   { color: var(--green); }
-    .log-line.warn { color: var(--yellow); }
-    .log-line.err  { color: var(--red); }
-    .log-line.info { color: var(--cyan); }
-
-    #results { width: 100%; max-width: 700px; margin-top: 24px; }
-
-    .result-header {
-      font-family: var(--mono); font-size: 0.72rem; color: var(--text-dim);
-      letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-
-    .badge {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 99px; font-size: 0.68rem; padding: 3px 10px;
-      color: var(--green); font-family: var(--mono);
-    }
-
-    .media-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 10px; padding: 16px 18px; margin-bottom: 10px;
-      display: flex; align-items: center; gap: 14px; transition: border-color 0.2s;
-    }
-    .media-card:hover { border-color: var(--cyan); }
-
-    .media-type-badge {
-      font-family: var(--mono); font-size: 0.68rem; font-weight: 700;
-      padding: 4px 9px; border-radius: 5px; flex-shrink: 0; letter-spacing: 0.05em;
-    }
-    .type-m3u8 { background: rgba(0,212,255,0.15); color: var(--cyan);   border: 1px solid rgba(0,212,255,0.3); }
-    .type-mpd  { background: rgba(255,211,42,0.12); color: var(--yellow); border: 1px solid rgba(255,211,42,0.3); }
-    .type-mp4  { background: rgba(0,255,136,0.12);  color: var(--green);  border: 1px solid rgba(0,255,136,0.3); }
-
-    .media-url {
-      font-family: var(--mono); font-size: 0.78rem; color: var(--text);
-      flex: 1; white-space: nowrap; overflow: hidden;
-      text-overflow: ellipsis; min-width: 0;
-    }
-
-    .copy-btn {
-      flex-shrink: 0; background: transparent; border: 1px solid var(--border);
-      border-radius: 6px; color: var(--text-dim); cursor: pointer;
-      font-family: var(--mono); font-size: 0.68rem; padding: 5px 10px;
-      transition: all 0.2s;
-    }
-    .copy-btn:hover { border-color: var(--cyan); color: var(--cyan); background: rgba(0,212,255,0.06); }
-    .copy-btn.copied { border-color: var(--green); color: var(--green); }
-
-    .open-btn {
-      flex-shrink: 0; background: transparent; border: 1px solid var(--border);
-      border-radius: 6px; color: var(--text-dim); cursor: pointer;
-      font-family: var(--mono); font-size: 0.68rem; padding: 5px 10px;
-      text-decoration: none; display: inline-block; transition: all 0.2s;
-    }
-    .open-btn:hover { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.06); }
-
-    .notice {
-      background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.2);
-      border-radius: 8px; padding: 12px 16px; font-family: var(--mono);
-      font-size: 0.72rem; color: var(--text-dim); line-height: 1.7;
-      margin-top: 28px; max-width: 700px; width: 100%;
-    }
-    .notice strong { color: var(--cyan); font-weight: 500; }
-    .notice a { color: var(--cyan); }
-
-    .empty {
-      text-align: center; padding: 40px 0;
-      font-family: var(--mono); font-size: 0.8rem; color: var(--muted);
-    }
-    .empty .icon { font-size: 2rem; margin-bottom: 12px; }
-
-    .error-box {
-      background: rgba(255,71,87,0.08); border: 1px solid rgba(255,71,87,0.3);
-      border-radius: 8px; padding: 14px 16px; font-family: var(--mono);
-      font-size: 0.78rem; color: var(--red); margin-top: 16px;
-    }
-
-    @media (max-width: 520px) {
-      .input-row, .row-selects { flex-direction: column; }
-      .media-card { flex-wrap: wrap; }
-      .media-url { white-space: normal; word-break: break-all; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .progress-bar, .btn, .media-card { transition: none; }
+    @media (prefers-reduced-motion:reduce) {
+      .progress-bar, .btn, .media-card { transition:none; }
     }
   </style>
 </head>
@@ -280,6 +160,7 @@
       <div class="progress-track">
         <div class="progress-bar" id="progressBar"></div>
       </div>
+      <div class="proxy-status" id="proxyStatus"></div>
       <div class="log-box" id="logBox"></div>
     </div>
   </div>
@@ -287,9 +168,9 @@
   <div id="results"></div>
 
   <div class="notice">
-    <strong>How it works:</strong> Calls the undocumented <code>/api/films</code> endpoint to fetch active server links,
-    then follows each through provider pages to extract <code>.m3u8</code> / <code>.mpd</code> / <code>.mp4</code> URLs
-    &mdash; all client-side via a CORS proxy.<br><br>
+    <strong>How it works:</strong> Calls the undocumented <code>/api/films</code> endpoint, then follows
+    each server link through provider pages to extract <code>.m3u8</code> / <code>.mpd</code> / <code>.mp4</code>
+    URLs &mdash; client-side via 5 CORS proxies with automatic fallback.<br><br>
     <strong>Paste into:</strong> VLC &middot; mpv &middot;
     <a href="https://videojs.com/demos/advanced/" target="_blank" rel="noopener">Video.js demo</a>
     &middot; any HLS player.
@@ -298,25 +179,133 @@
   <script>
   "use strict";
 
-  /* ── CONFIG ── */
-  const PROXY        = (url) => "https://api.allorigins.win/get?url=" + encodeURIComponent(url);
+  /* ─────────────────────────────────────────────────────────────
+     MULTI-PROXY SYSTEM
+     Each entry has:
+       build(url)         → proxy URL string
+       extract(res,text)  → raw content string
+       raw                → true if response is plain text (not JSON wrapper)
+  ───────────────────────────────────────────────────────────── */
+  const PROXIES = [
+    {
+      name: "AllOrigins",
+      build: (u) => "https://api.allorigins.win/get?url=" + encodeURIComponent(u),
+      extract: (data) => data.contents || "",
+      raw: false,
+    },
+    {
+      name: "CORSProxy.io",
+      build: (u) => "https://corsproxy.io/?" + encodeURIComponent(u),
+      extract: (_, text) => text,
+      raw: true,
+    },
+    {
+      name: "CodeTabs",
+      build: (u) => "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(u),
+      extract: (_, text) => text,
+      raw: true,
+    },
+    {
+      name: "ThingProxy",
+      build: (u) => "https://thingproxy.freeboard.io/fetch/" + u,
+      extract: (_, text) => text,
+      raw: true,
+    },
+    {
+      name: "CORSAnywhere",
+      build: (u) => "https://cors-anywhere.herokuapp.com/" + u,
+      extract: (_, text) => text,
+      raw: true,
+    },
+  ];
+
+  /* Per-session health state for each proxy */
+  const proxyHealth = PROXIES.map(() => ({ dead: false, fails: 0 }));
+  let preferredIdx  = 0; /* index of last successful proxy */
+
+  /* Render the proxy pill bar */
+  function renderProxyPills(activeIdx) {
+    const bar = document.getElementById("proxyStatus");
+    if (!bar) return;
+    bar.innerHTML = PROXIES.map((p, i) => {
+      const h   = proxyHealth[i];
+      const cls = h.dead ? "dead" : i === activeIdx ? "active" : "idle";
+      return '<span class="proxy-pill ' + cls + '">' + p.name + '</span>';
+    }).join("");
+  }
+
+  /* Try each live proxy in turn, starting from preferredIdx.
+     Returns { ok, text } */
+  async function proxyFetch(url) {
+    log("fetch \u2192 " + truncate(url, 90), "info");
+
+    /* Build ordered list: preferred first, then the rest */
+    const order = [];
+    for (let i = 0; i < PROXIES.length; i++) {
+      order.push((preferredIdx + i) % PROXIES.length);
+    }
+
+    for (const idx of order) {
+      if (proxyHealth[idx].dead) continue;
+
+      const proxy    = PROXIES[idx];
+      const proxyUrl = proxy.build(url);
+      renderProxyPills(idx);
+
+      try {
+        const controller = new AbortController();
+        const timer      = setTimeout(() => controller.abort(), 10000);
+
+        const res = await fetch(proxyUrl, { signal: controller.signal });
+        clearTimeout(timer);
+
+        if (!res.ok) throw new Error("HTTP " + res.status);
+
+        const text = proxy.raw
+          ? await res.text()
+          : proxy.extract(await res.json(), "");
+
+        if (!text) throw new Error("empty body");
+
+        /* Mark healthy */
+        proxyHealth[idx].fails = 0;
+        preferredIdx           = idx;
+        log("  [" + proxy.name + "] OK", "ok");
+        renderProxyPills(idx);
+        return { ok: true, text };
+
+      } catch (e) {
+        proxyHealth[idx].fails++;
+        const fatal = proxyHealth[idx].fails >= 2;
+        if (fatal) proxyHealth[idx].dead = true;
+        log("  [" + proxy.name + "] " + e.message +
+            (fatal ? " \u2014 marked dead, trying next\u2026" : " \u2014 trying next\u2026"), "warn");
+        renderProxyPills(-1);
+      }
+    }
+
+    log("  \u26A0 all proxies failed for this URL", "err");
+    renderProxyPills(-1);
+    return { ok: false, text: "" };
+  }
+
+  /* ── CONSTANTS ── */
   const FREMBED_BASE = "https://frembed.one";
   const MEDIA_RE     = /https?:\/\/[^\s'"<>\\]+?(?:\.m3u8|\.mpd|\.mp4)(?:\?[^\s'"<>\\]*)?/gi;
-
-  let running = false;
+  let running        = false;
 
   /* ── HELPERS ── */
   function baseN(n, r) {
     const a = "0123456789abcdefghijklmnopqrstuvwxyz";
     if (n === 0) return "0";
-    const chars = [];
-    while (n) { chars.unshift(a[n % r]); n = Math.floor(n / r); }
-    return chars.join("");
+    const c = [];
+    while (n) { c.unshift(a[n % r]); n = Math.floor(n / r); }
+    return c.join("");
   }
 
   function unpackPACKED(text) {
     const out = [];
-    const re = /eval\(function\(p,a,c,k,e,d\).*?\}\('(.*?)',(\d+),\d+,'(.*?)'\.split\('\|'\)\)\)/gis;
+    const re  = /eval\(function\(p,a,c,k,e,d\).*?\}\('(.*?)',(\d+),\d+,'(.*?)'\.split\('\|'\)\)\)/gis;
     let m;
     while ((m = re.exec(text)) !== null) {
       let p = m[1];
@@ -367,25 +356,11 @@
     return [...found].filter(u => u.startsWith("http"));
   }
 
-  /* ── PROXY FETCH ── */
-  async function proxyFetch(url) {
-    log("fetch \u2192 " + truncate(url, 90), "info");
-    try {
-      const res  = await fetch(PROXY(url));
-      if (!res.ok) throw new Error("proxy HTTP " + res.status);
-      const data = await res.json();
-      return { ok: true, text: data.contents || "" };
-    } catch (e) {
-      log("proxy error: " + e.message, "err");
-      return { ok: false, text: "" };
-    }
-  }
-
   /* ── LOGGER ── */
   function log(msg, type) {
     const box  = document.getElementById("logBox");
     const line = document.createElement("span");
-    line.className = "log-line " + (type || "");
+    line.className  = "log-line " + (type || "");
     line.textContent = "> " + msg;
     box.appendChild(line);
     box.appendChild(document.createTextNode("\n"));
@@ -409,11 +384,16 @@
     if (!filmId) { showError("Enter a film ID first."); return; }
 
     running = true;
-    document.getElementById("extractBtn").disabled     = true;
-    document.getElementById("results").innerHTML       = "";
+    /* Reset proxy health for a fresh attempt */
+    proxyHealth.forEach(h => { h.dead = false; h.fails = 0; });
+    preferredIdx = 0;
+
+    document.getElementById("extractBtn").disabled    = true;
+    document.getElementById("results").innerHTML      = "";
     document.getElementById("scanner").style.display  = "block";
-    document.getElementById("logBox").innerHTML        = "";
+    document.getElementById("logBox").innerHTML       = "";
     setProgress(0, "SCANNING\u2026");
+    renderProxyPills(-1);
 
     log("Starting extraction", "info");
     log("ID: " + filmId + "  type: " + idType + "  kind: " + kind, "info");
@@ -421,14 +401,14 @@
     const allMedia = [];
 
     try {
-      /* STEP 1 — /api/films */
+      /* STEP 1 */
       setProgress(10, "FETCHING METADATA\u2026");
       const apiUrl = FREMBED_BASE + "/api/films?id=" + encodeURIComponent(filmId) + "&idType=" + idType;
       log("API \u2192 " + apiUrl);
       const apiRes = await proxyFetch(apiUrl);
 
       if (!apiRes.ok || !apiRes.text) {
-        showError("Could not reach /api/films. The proxy may be blocked or the ID is invalid.");
+        showError("Could not reach /api/films. All proxies may be blocked, or the ID is invalid.");
         return done();
       }
 
@@ -444,14 +424,14 @@
       const servers = Object.entries(filmData).filter(([k, v]) => v && /^link\d+$/.test(k));
 
       if (!servers.length) {
-        showError("No active stream servers found for this ID. Try a different ID or type.");
+        showError("No active stream servers found. Try a different ID or type.");
         return done();
       }
 
       log("Active servers: " + servers.map(([k]) => k).join(", "), "ok");
       const step = 70 / servers.length;
 
-      /* STEP 2 — hit each server */
+      /* STEP 2 */
       for (let i = 0; i < servers.length; i++) {
         const [key, serverPath] = servers[i];
         const serverUrl = serverPath.startsWith("http") ? serverPath : FREMBED_BASE + serverPath;
@@ -462,7 +442,6 @@
         const sRes = await proxyFetch(serverUrl);
         if (!sRes.ok) { log("  " + key + ": failed", "err"); continue; }
 
-        /* JSON response? */
         let providerUrl = "";
         try {
           const d = JSON.parse(sRes.text);
@@ -477,23 +456,24 @@
           continue;
         }
 
-        /* Direct media in body? */
         const direct = extractMedia(sRes.text);
-        if (direct.length) { log("  direct media: " + direct.length + " URL(s)", "ok"); allMedia.push(...direct); continue; }
+        if (direct.length) {
+          log("  direct media: " + direct.length + " URL(s)", "ok");
+          allMedia.push(...direct);
+          continue;
+        }
 
-        /* Iframe src as provider? */
-        const iframeMatch = sRes.text.match(/(?:src|href)=['"](https?:\/\/[^'"]{10,})['"]/i);
-        const iframeSrc   = iframeMatch ? iframeMatch[1] : "";
-        if (iframeSrc && !iframeSrc.includes(FREMBED_BASE)) {
-          log("  provider (iframe): " + truncate(iframeSrc, 80));
-          allMedia.push(...await scrapeProvider(iframeSrc));
+        const iframeM = sRes.text.match(/(?:src|href)=['"](https?:\/\/[^'"]{10,})['"]/i);
+        if (iframeM && !iframeM[1].includes(FREMBED_BASE)) {
+          log("  provider (iframe): " + truncate(iframeM[1], 80));
+          allMedia.push(...await scrapeProvider(iframeM[1]));
           continue;
         }
 
         log("  no media found for " + key, "warn");
       }
 
-      /* STEP 3 — show results */
+      /* STEP 3 */
       setProgress(95, "DONE");
       const unique = [...new Set(allMedia)].filter(u => u.startsWith("http"));
       log("\nFound " + unique.length + " stream URL(s)", unique.length ? "ok" : "warn");
@@ -535,12 +515,12 @@
   function showResults(urls) {
     const el = document.getElementById("results");
     if (!urls.length) {
-      el.innerHTML = '<div class="empty"><div class="icon">&#x1F50D;</div>No stream URLs extracted.<br>The site may require cookies/JS or the proxy was blocked.</div>';
+      el.innerHTML = '<div class="empty"><div class="icon">&#x1F50D;</div>No stream URLs extracted.<br>The site may require cookies/JS or all proxies were blocked.</div>';
       return;
     }
-    const typeOf = (url) => url.includes(".m3u8") ? ["M3U8","type-m3u8"] : url.includes(".mpd") ? ["MPD","type-mpd"] : ["MP4","type-mp4"];
+    const typeOf = (u) => u.includes(".m3u8") ? ["M3U8","type-m3u8"] : u.includes(".mpd") ? ["MPD","type-mpd"] : ["MP4","type-mp4"];
     let html = '<div class="result-header"><span>STREAM URLS</span><span class="badge">' + urls.length + ' found</span></div>';
-    urls.forEach((url, i) => {
+    urls.forEach((url) => {
       const [label, cls] = typeOf(url);
       const safe = url.replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
       html += '<div class="media-card">'
@@ -569,13 +549,11 @@
 
   /* ── EVENTS ── */
   document.getElementById("extractBtn").addEventListener("click", runExtract);
-
   document.getElementById("filmId").addEventListener("input", function () {
     const v = this.value.trim();
     if (v.startsWith("tt"))   document.getElementById("idType").value = "imdb";
     else if (/^\d+$/.test(v)) document.getElementById("idType").value = "tmdb";
   });
-
   document.getElementById("filmId").addEventListener("keydown", function (e) {
     if (e.key === "Enter") runExtract();
   });
