@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FrEmbed Stream Extractor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0e1a;
+      --surface:  #111827;
+      --surface2: #1a2236;
+      --border:   #1e2d45;
+      --cyan:     #00d4ff;
+      --green:    #00ff88;
+      --red:      #ff4757;
+      --yellow:   #ffd32a;
+      --muted:    #4a6080;
+      --text:     #c9d8f0;
+      --text-dim: #6b84a8;
+      --mono:     'JetBrains Mono', monospace;
+      --sans:     'Inter', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px 80px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+      max-width: 640px;
+    }
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .logo-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--cyan), #006aff);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+
+    h1 {
+      font-family: var(--mono);
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: 700; color: #fff; letter-spacing: -0.02em;
+    }
+    h1 span { color: var(--cyan); }
+
+    .subtitle {
+      font-size: 0.875rem; color: var(--text-dim);
+      line-height: 1.6; font-family: var(--mono);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px; padding: 28px;
+      width: 100%; max-width: 700px;
+    }
+
+    .form-group { margin-bottom: 16px; }
+
+    label {
+      display: block; font-family: var(--mono); font-size: 0.72rem;
+      font-weight: 500; color: var(--cyan); letter-spacing: 0.12em;
+      text-transform: uppercase; margin-bottom: 8px;
+    }
+
+    .input-row { display: flex; gap: 10px; }
+
+    input[type="text"] {
+      flex: 1; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: var(--mono); font-size: 0.875rem;
+      padding: 12px 16px; outline: none; transition: border-color 0.2s;
+    }
+    input[type="text"]:focus { border-color: var(--cyan); }
+    input[type="text"]::placeholder { color: var(--muted); }
+
+    .row-selects { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    select {
+      flex: 1; min-width: 120px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-family: var(--mono);
+      font-size: 0.8rem; padding: 10px 14px; outline: none; cursor: pointer;
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234a6080' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      padding-right: 32px; transition: border-color 0.2s;
+    }
+    select:focus { border-color: var(--cyan); }
+
+    .btn {
+      background: linear-gradient(135deg, var(--cyan), #0099cc);
+      border: none; border-radius: 8px; color: #000; cursor: pointer;
+      font-family: var(--mono); font-size: 0.875rem; font-weight: 700;
+      letter-spacing: 0.04em; padding: 12px 24px;
+      transition: opacity 0.2s, transform 0.1s; white-space: nowrap;
+    }
+    .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    #scanner { display: none; margin: 24px 0 0; }
+
+    .scan-label {
+      font-family: var(--mono); font-size: 0.72rem; color: var(--cyan);
+      letter-spacing: 0.1em; margin-bottom: 8px;
+      display: flex; justify-content: space-between;
+    }
+
+    .progress-track {
+      height: 3px; background: var(--border);
+      border-radius: 99px; overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--cyan), var(--green));
+      border-radius: 99px; transition: width 0.4s ease;
+      box-shadow: 0 0 8px var(--cyan);
+    }
+
+    .log-box {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; font-family: var(--mono); font-size: 0.72rem;
+      color: var(--text-dim); padding: 14px 16px; height: 140px;
+      overflow-y: auto; margin-top: 14px; line-height: 1.7;
+      scroll-behavior: smooth; white-space: pre-wrap;
+    }
+    .log-box::-webkit-scrollbar { width: 4px; }
+    .log-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    .log-line { display: block; }
+    .log-line.ok   { color: var(--green); }
+    .log-line.warn { color: var(--yellow); }
+    .log-line.err  { color: var(--red); }
+    .log-line.info { color: var(--cyan); }
+
+    #results { width: 100%; max-width: 700px; margin-top: 24px; }
+
+    .result-header {
+      font-family: var(--mono); font-size: 0.72rem; color: var(--text-dim);
+      letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+
+    .badge {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 99px; font-size: 0.68rem; padding: 3px 10px;
+      color: var(--green); font-family: var(--mono);
+    }
+
+    .media-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px 18px; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 14px; transition: border-color 0.2s;
+    }
+    .media-card:hover { border-color: var(--cyan); }
+
+    .media-type-badge {
+      font-family: var(--mono); font-size: 0.68rem; font-weight: 700;
+      padding: 4px 9px; border-radius: 5px; flex-shrink: 0; letter-spacing: 0.05em;
+    }
+    .type-m3u8 { background: rgba(0,212,255,0.15); color: var(--cyan);   border: 1px solid rgba(0,212,255,0.3); }
+    .type-mpd  { background: rgba(255,211,42,0.12); color: var(--yellow); border: 1px solid rgba(255,211,42,0.3); }
+    .type-mp4  { background: rgba(0,255,136,0.12);  color: var(--green);  border: 1px solid rgba(0,255,136,0.3); }
+
+    .media-url {
+      font-family: var(--mono); font-size: 0.78rem; color: var(--text);
+      flex: 1; white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis; min-width: 0;
+    }
+
+    .copy-btn {
+      flex-shrink: 0; background: transparent; border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text-dim); cursor: pointer;
+      font-family: var(--mono); font-size: 0.68rem; padding: 5px 10px;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { border-color: var(--cyan); color: var(--cyan); background: rgba(0,212,255,0.06); }
+    .copy-btn.copied { border-color: var(--green); color: var(--green); }
+
+    .open-btn {
+      flex-shrink: 0; background: transparent; border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text-dim); cursor: pointer;
+      font-family: var(--mono); font-size: 0.68rem; padding: 5px 10px;
+      text-decoration: none; display: inline-block; transition: all 0.2s;
+    }
+    .open-btn:hover { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.06); }
+
+    .notice {
+      background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.2);
+      border-radius: 8px; padding: 12px 16px; font-family: var(--mono);
+      font-size: 0.72rem; color: var(--text-dim); line-height: 1.7;
+      margin-top: 28px; max-width: 700px; width: 100%;
+    }
+    .notice strong { color: var(--cyan); font-weight: 500; }
+    .notice a { color: var(--cyan); }
+
+    .empty {
+      text-align: center; padding: 40px 0;
+      font-family: var(--mono); font-size: 0.8rem; color: var(--muted);
+    }
+    .empty .icon { font-size: 2rem; margin-bottom: 12px; }
+
+    .error-box {
+      background: rgba(255,71,87,0.08); border: 1px solid rgba(255,71,87,0.3);
+      border-radius: 8px; padding: 14px 16px; font-family: var(--mono);
+      font-size: 0.78rem; color: var(--red); margin-top: 16px;
+    }
+
+    @media (max-width: 520px) {
+      .input-row, .row-selects { flex-direction: column; }
+      .media-card { flex-wrap: wrap; }
+      .media-url { white-space: normal; word-break: break-all; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .progress-bar, .btn, .media-card { transition: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-row">
+      <div class="logo-icon">&#x26A1;</div>
+      <h1>fr<span>embed</span>.extract</h1>
+    </div>
+    <p class="subtitle">Resolve hidden stream URLs from frembed embed pages</p>
+  </header>
+
+  <div class="card">
+    <div class="form-group">
+      <label>Film / Show ID</label>
+      <div class="input-row">
+        <input type="text" id="filmId" placeholder="tt0816692  or  254  or  custom path" />
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="row-selects">
+        <select id="idType">
+          <option value="tmdb">TMDB ID</option>
+          <option value="imdb">IMDb ID (tt&hellip;)</option>
+        </select>
+        <select id="mediaKind">
+          <option value="movie">Movie</option>
+          <option value="tv">TV / Series</option>
+        </select>
+        <button class="btn" id="extractBtn">Extract Streams</button>
+      </div>
+    </div>
+
+    <div id="scanner">
+      <div class="scan-label">
+        <span id="scanStatus">SCANNING&hellip;</span>
+        <span id="scanPct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="log-box" id="logBox"></div>
+    </div>
+  </div>
+
+  <div id="results"></div>
+
+  <div class="notice">
+    <strong>How it works:</strong> Calls the undocumented <code>/api/films</code> endpoint to fetch active server links,
+    then follows each through provider pages to extract <code>.m3u8</code> / <code>.mpd</code> / <code>.mp4</code> URLs
+    &mdash; all client-side via a CORS proxy.<br><br>
+    <strong>Paste into:</strong> VLC &middot; mpv &middot;
+    <a href="https://videojs.com/demos/advanced/" target="_blank" rel="noopener">Video.js demo</a>
+    &middot; any HLS player.
+  </div>
+
+  <script>
+  "use strict";
+
+  /* ── CONFIG ── */
+  const PROXY        = (url) => "https://api.allorigins.win/get?url=" + encodeURIComponent(url);
+  const FREMBED_BASE = "https://frembed.one";
+  const MEDIA_RE     = /https?:\/\/[^\s'"<>\\]+?(?:\.m3u8|\.mpd|\.mp4)(?:\?[^\s'"<>\\]*)?/gi;
+
+  let running = false;
+
+  /* ── HELPERS ── */
+  function baseN(n, r) {
+    const a = "0123456789abcdefghijklmnopqrstuvwxyz";
+    if (n === 0) return "0";
+    const chars = [];
+    while (n) { chars.unshift(a[n % r]); n = Math.floor(n / r); }
+    return chars.join("");
+  }
+
+  function unpackPACKED(text) {
+    const out = [];
+    const re = /eval\(function\(p,a,c,k,e,d\).*?\}\('(.*?)',(\d+),\d+,'(.*?)'\.split\('\|'\)\)\)/gis;
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      let p = m[1];
+      const radix = parseInt(m[2], 10);
+      m[3].split("|").forEach((k, i) => {
+        if (k) p = p.replace(new RegExp("\\b" + baseN(i, radix) + "\\b", "g"), k);
+      });
+      out.push(p);
+    }
+    return out;
+  }
+
+  function maybeB64(text) {
+    const s = text.trim();
+    if (s.length < 40 || s.length % 4 !== 0) return text;
+    if (!/^[A-Za-z0-9+/=\r\n]+$/.test(s)) return text;
+    try {
+      const d = atob(s.replace(/\r?\n/g, ""));
+      if (["<html","http","{","m3u8"].some(x => d.includes(x))) return d;
+    } catch (_) {}
+    return text;
+  }
+
+  function htmlUnescape(str) {
+    const el = document.createElement("textarea");
+    el.innerHTML = str;
+    return el.value;
+  }
+
+  function extractMedia(text) {
+    const bodies = [text, maybeB64(text), htmlUnescape(text), text.replace(/\\\//g, "/")];
+    bodies.push(...unpackPACKED(text));
+    const found = new Set();
+    bodies.forEach(body => {
+      for (const b of [body, body.replace(/\\\//g, "/")]) {
+        let mm;
+        const r = new RegExp(MEDIA_RE.source, "gi");
+        while ((mm = r.exec(b)) !== null) found.add(mm[0].replace(/\\\//g, "/"));
+        const muR = /[?&]mu=([^&\s'"<>]+)/g;
+        while ((mm = muR.exec(b)) !== null) { try { found.add(decodeURIComponent(mm[1])); } catch (_) {} }
+        const kvR = /['"](?:hls|file|src|source|stream|url)['"]\s*:\s*['"]([^'"]{10,})['"]/g;
+        while ((mm = kvR.exec(b)) !== null) {
+          const c = mm[1].replace(/\\\//g, "/");
+          if ([".m3u8",".mpd",".mp4"].some(x => c.includes(x))) found.add(c);
+        }
+      }
+    });
+    return [...found].filter(u => u.startsWith("http"));
+  }
+
+  /* ── PROXY FETCH ── */
+  async function proxyFetch(url) {
+    log("fetch \u2192 " + truncate(url, 90), "info");
+    try {
+      const res  = await fetch(PROXY(url));
+      if (!res.ok) throw new Error("proxy HTTP " + res.status);
+      const data = await res.json();
+      return { ok: true, text: data.contents || "" };
+    } catch (e) {
+      log("proxy error: " + e.message, "err");
+      return { ok: false, text: "" };
+    }
+  }
+
+  /* ── LOGGER ── */
+  function log(msg, type) {
+    const box  = document.getElementById("logBox");
+    const line = document.createElement("span");
+    line.className = "log-line " + (type || "");
+    line.textContent = "> " + msg;
+    box.appendChild(line);
+    box.appendChild(document.createTextNode("\n"));
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function setProgress(pct, status) {
+    document.getElementById("progressBar").style.width = pct + "%";
+    document.getElementById("scanPct").textContent     = pct + "%";
+    if (status) document.getElementById("scanStatus").textContent = status;
+  }
+
+  function truncate(s, n) { return s.length > n ? s.slice(0, n) + "\u2026" : s; }
+
+  /* ── MAIN ── */
+  async function runExtract() {
+    if (running) return;
+    const filmId = document.getElementById("filmId").value.trim();
+    const idType = document.getElementById("idType").value;
+    const kind   = document.getElementById("mediaKind").value;
+    if (!filmId) { showError("Enter a film ID first."); return; }
+
+    running = true;
+    document.getElementById("extractBtn").disabled     = true;
+    document.getElementById("results").innerHTML       = "";
+    document.getElementById("scanner").style.display  = "block";
+    document.getElementById("logBox").innerHTML        = "";
+    setProgress(0, "SCANNING\u2026");
+
+    log("Starting extraction", "info");
+    log("ID: " + filmId + "  type: " + idType + "  kind: " + kind, "info");
+
+    const allMedia = [];
+
+    try {
+      /* STEP 1 — /api/films */
+      setProgress(10, "FETCHING METADATA\u2026");
+      const apiUrl = FREMBED_BASE + "/api/films?id=" + encodeURIComponent(filmId) + "&idType=" + idType;
+      log("API \u2192 " + apiUrl);
+      const apiRes = await proxyFetch(apiUrl);
+
+      if (!apiRes.ok || !apiRes.text) {
+        showError("Could not reach /api/films. The proxy may be blocked or the ID is invalid.");
+        return done();
+      }
+
+      let filmData;
+      try { filmData = JSON.parse(apiRes.text); }
+      catch (_) {
+        showError("API response was not valid JSON. Check the ID and try again.");
+        log("Raw: " + truncate(apiRes.text, 200), "err");
+        return done();
+      }
+
+      log("Film data: " + JSON.stringify(filmData), "ok");
+      const servers = Object.entries(filmData).filter(([k, v]) => v && /^link\d+$/.test(k));
+
+      if (!servers.length) {
+        showError("No active stream servers found for this ID. Try a different ID or type.");
+        return done();
+      }
+
+      log("Active servers: " + servers.map(([k]) => k).join(", "), "ok");
+      const step = 70 / servers.length;
+
+      /* STEP 2 — hit each server */
+      for (let i = 0; i < servers.length; i++) {
+        const [key, serverPath] = servers[i];
+        const serverUrl = serverPath.startsWith("http") ? serverPath : FREMBED_BASE + serverPath;
+
+        setProgress(15 + Math.round(i * step), "SERVER " + key.toUpperCase() + "\u2026");
+        log("\n[" + key + "] " + serverUrl, "info");
+
+        const sRes = await proxyFetch(serverUrl);
+        if (!sRes.ok) { log("  " + key + ": failed", "err"); continue; }
+
+        /* JSON response? */
+        let providerUrl = "";
+        try {
+          const d = JSON.parse(sRes.text);
+          log("  JSON: " + JSON.stringify(d));
+          providerUrl = d.url || d.link || d.embed || d.src || d.iframe || "";
+          if (providerUrl && !providerUrl.startsWith("http")) providerUrl = FREMBED_BASE + providerUrl;
+        } catch (_) {}
+
+        if (providerUrl) {
+          log("  provider (JSON): " + truncate(providerUrl, 80));
+          allMedia.push(...await scrapeProvider(providerUrl));
+          continue;
+        }
+
+        /* Direct media in body? */
+        const direct = extractMedia(sRes.text);
+        if (direct.length) { log("  direct media: " + direct.length + " URL(s)", "ok"); allMedia.push(...direct); continue; }
+
+        /* Iframe src as provider? */
+        const iframeMatch = sRes.text.match(/(?:src|href)=['"](https?:\/\/[^'"]{10,})['"]/i);
+        const iframeSrc   = iframeMatch ? iframeMatch[1] : "";
+        if (iframeSrc && !iframeSrc.includes(FREMBED_BASE)) {
+          log("  provider (iframe): " + truncate(iframeSrc, 80));
+          allMedia.push(...await scrapeProvider(iframeSrc));
+          continue;
+        }
+
+        log("  no media found for " + key, "warn");
+      }
+
+      /* STEP 3 — show results */
+      setProgress(95, "DONE");
+      const unique = [...new Set(allMedia)].filter(u => u.startsWith("http"));
+      log("\nFound " + unique.length + " stream URL(s)", unique.length ? "ok" : "warn");
+      showResults(unique);
+
+    } catch (e) {
+      showError("Unexpected error: " + e.message);
+      log(e.stack || e.message, "err");
+    }
+
+    setProgress(100, "COMPLETE");
+    done();
+  }
+
+  async function scrapeProvider(providerUrl) {
+    log("  scraping provider: " + truncate(providerUrl, 80));
+    const res = await proxyFetch(providerUrl);
+    if (!res.ok) return [];
+
+    const found = extractMedia(res.text);
+    if (found.length) { log("  provider media: " + found.length + " URL(s)", "ok"); return found; }
+
+    const jsSrcs = [...res.text.matchAll(/<script[^>]+src=['"]([^'"]+\.js[^'"]*)['"]/gi)].map(m => m[1]);
+    for (const jsPath of jsSrcs.slice(0, 3)) {
+      const jsUrl = jsPath.startsWith("http") ? jsPath : new URL(jsPath, providerUrl).href;
+      log("  checking JS: " + truncate(jsUrl, 70));
+      const jr = await proxyFetch(jsUrl);
+      if (jr.ok) {
+        const jm = extractMedia(jr.text);
+        if (jm.length) { log("  JS media: " + jm.length + " URL(s)", "ok"); return jm; }
+      }
+    }
+
+    log("  no media on provider", "warn");
+    return [];
+  }
+
+  /* ── UI ── */
+  function showResults(urls) {
+    const el = document.getElementById("results");
+    if (!urls.length) {
+      el.innerHTML = '<div class="empty"><div class="icon">&#x1F50D;</div>No stream URLs extracted.<br>The site may require cookies/JS or the proxy was blocked.</div>';
+      return;
+    }
+    const typeOf = (url) => url.includes(".m3u8") ? ["M3U8","type-m3u8"] : url.includes(".mpd") ? ["MPD","type-mpd"] : ["MP4","type-mp4"];
+    let html = '<div class="result-header"><span>STREAM URLS</span><span class="badge">' + urls.length + ' found</span></div>';
+    urls.forEach((url, i) => {
+      const [label, cls] = typeOf(url);
+      const safe = url.replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+      html += '<div class="media-card">'
+        + '<span class="media-type-badge ' + cls + '">' + label + '</span>'
+        + '<span class="media-url" title="' + safe + '">' + safe + '</span>'
+        + '<button class="copy-btn" data-url="' + safe + '">Copy</button>'
+        + '<a class="open-btn" href="' + safe + '" target="_blank" rel="noopener">Open</a>'
+        + '</div>';
+    });
+    el.innerHTML = html;
+    el.querySelectorAll(".copy-btn").forEach(btn => {
+      btn.addEventListener("click", function () {
+        navigator.clipboard.writeText(this.dataset.url).then(() => {
+          this.textContent = "Copied!"; this.classList.add("copied");
+          setTimeout(() => { this.textContent = "Copy"; this.classList.remove("copied"); }, 1800);
+        });
+      });
+    });
+  }
+
+  function showError(msg) {
+    document.getElementById("results").innerHTML = '<div class="error-box">&#x26A0; ' + msg + '</div>';
+  }
+
+  function done() { running = false; document.getElementById("extractBtn").disabled = false; }
+
+  /* ── EVENTS ── */
+  document.getElementById("extractBtn").addEventListener("click", runExtract);
+
+  document.getElementById("filmId").addEventListener("input", function () {
+    const v = this.value.trim();
+    if (v.startsWith("tt"))   document.getElementById("idType").value = "imdb";
+    else if (/^\d+$/.test(v)) document.getElementById("idType").value = "tmdb";
+  });
+
+  document.getElementById("filmId").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") runExtract();
+  });
+  </script>
+</body>
+</html>
