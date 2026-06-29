@@ -188,10 +188,10 @@
   ───────────────────────────────────────────────────────────── */
   const PROXIES = [
     {
-      name: "AllOrigins",
-      build: (u) => "https://api.allorigins.win/get?url=" + encodeURIComponent(u),
+      name: "vixsrcproxy2",
+      build: (u) => "https://vixsrcproxy2.khantara922.workers.dev/get?url=" + encodeURIComponent(u),
       extract: (data) => data.contents || "",
-      raw: false,
+      raw: true,
     },
     {
       name: "CORSProxy.io",
